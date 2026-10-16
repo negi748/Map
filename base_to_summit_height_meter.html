@@ -1,0 +1,161 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="theme-color" content="#101b20">
+<title>Base-to-Summit Height Meter</title>
+<style>
+:root{color-scheme:dark;--bg:#0a1216;--panel:#132127;--panel2:#0d191e;--line:#2b424b;--text:#eef6f5;--muted:#9eb2b8;--mint:#a3e8c8;--blue:#85d0f0;--red:#ff9f98;--amber:#f4d28b}
+*{box-sizing:border-box}body{margin:0;background:radial-gradient(ellipse at top,#193039 0,#0a1216 62%);color:var(--text);font:15px/1.5 system-ui,-apple-system,Segoe UI,Roboto,sans-serif}.wrap{max-width:850px;margin:auto;padding:20px 14px 36px}.hero{padding:16px 2px 22px}.eyebrow{font-size:12px;letter-spacing:.16em;text-transform:uppercase;color:var(--mint);font-weight:800}.hero h1{font-size:clamp(30px,6vw,46px);line-height:1.05;margin:9px 0}.hero p{color:var(--muted);max-width:650px;margin:0}.panel{border:1px solid var(--line);background:linear-gradient(145deg,#172a31,#101b20);border-radius:18px;padding:17px;margin-bottom:14px}.panel h2{font-size:18px;margin:0 0 5px}.sub{font-size:13px;color:var(--muted);margin:0 0 15px}.pill{display:inline-block;border:1px solid var(--line);border-radius:999px;padding:5px 9px;font-size:12px;color:var(--muted)}.status{font-size:13px;color:var(--muted);margin-top:12px;overflow-wrap:anywhere}.status.good{color:var(--mint)}.status.bad{color:var(--red)}.status.warn{color:var(--amber)}.buttons{display:grid;grid-template-columns:1fr 1fr;gap:10px}.btn{border:1px solid var(--line);border-radius:13px;padding:14px 12px;font:inherit;font-weight:800;cursor:pointer;background:#243a43;color:var(--text)}.btn:disabled{opacity:.4;cursor:not-allowed}.start{background:var(--mint);color:#10241c;border-color:transparent}.stop{background:#572b2b;border-color:#8a4545}.metrics{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}.metric{padding:13px;background:var(--panel2);border:1px solid var(--line);border-radius:13px;min-width:0}.metric span{display:block;color:var(--muted);font-size:12px}.metric strong{font-size:clamp(21px,5vw,30px);letter-spacing:-.03em;overflow-wrap:anywhere}.metric small{display:block;color:var(--muted);font-size:12px}.big{grid-column:1/-1;border-color:#46695d}.big strong{color:var(--mint);font-size:clamp(32px,8vw,44px)}.progress{height:8px;border-radius:99px;background:#0a1317;overflow:hidden;margin-top:12px}.progress div{height:100%;width:0;background:var(--mint);transition:width .25s}.scroll{max-height:240px;overflow:auto;border:1px solid var(--line);border-radius:12px}.scroll table{width:100%;border-collapse:collapse;font-size:13px}.scroll th,.scroll td{text-align:left;padding:9px;border-bottom:1px solid var(--line)}.scroll th{position:sticky;top:0;background:#1b2c32}.scroll tr:last-child td{border-bottom:0}.actions{display:flex;gap:8px;flex-wrap:wrap;margin-top:12px}.actions .btn{padding:9px 11px;font-size:13px}.note{border-left:3px solid var(--amber);background:#29251b;color:#f1dfb9;padding:11px 12px;border-radius:0 10px 10px 0;font-size:13px}.muted{color:var(--muted)}.footer{text-align:center;color:var(--muted);font-size:12px;margin-top:20px}a{color:var(--blue)}@media(max-width:440px){.wrap{padding:12px 10px 28px}.panel{padding:14px}.btn{padding:12px 8px}.metrics{gap:8px}.metric{padding:11px}}
+</style>
+</head>
+<body>
+<div class="wrap">
+<header class="hero">
+ <div class="eyebrow">GPS ascent tracker</div>
+ <h1>Base-to-Summit<br>Height Meter ⛰</h1>
+ <p>Start at the mountain base, walk to the top, then stop. This tool tracks GPS altitude and calculates the elevation gain. Designed for phone browsers.</p>
+ <p style="margin-top:12px"><span class="pill">Meters + feet</span> <span class="pill">Live GPS</span> <span class="pill">CSV export</span></p>
+</header>
+
+<section class="panel">
+ <h2>Climb session</h2>
+ <p class="sub">Enable Location and allow permission. For best results, test outdoors with a clear view of the sky.</p>
+ <div class="buttons">
+  <button class="btn start" id="startBtn">▶ START AT BASE</button>
+  <button class="btn stop" id="stopBtn" disabled>■ STOP AT TOP</button>
+ </div>
+ <div id="status" class="status">Ready. Go to the base, then press START.</div>
+ <div class="progress"><div id="progressBar"></div></div>
+ <div class="status" id="progressText">No climb recorded yet.</div>
+</section>
+
+<section class="panel">
+ <h2>Elevation results</h2>
+ <p class="sub">The primary result is maximum recorded altitude minus starting altitude. It is an estimate, not a survey-grade measurement.</p>
+ <div class="metrics">
+  <div class="metric big"><span>Estimated height gain to highest recorded point</span><strong id="gainM">— m</strong><small id="gainFt">— ft</small></div>
+  <div class="metric"><span>Starting altitude</span><strong id="baseM">—</strong><small id="baseFt">— ft</small></div>
+  <div class="metric"><span>Highest recorded altitude</span><strong id="topM">—</strong><small id="topFt">— ft</small></div>
+  <div class="metric"><span>Altitude at STOP</span><strong id="stopM">—</strong><small id="stopFt">— ft</small></div>
+  <div class="metric"><span>Duration</span><strong id="duration">—</strong><small>Elapsed time</small></div>
+  <div class="metric"><span>GPS points</span><strong id="points">0</strong><small id="accuracy">Waiting for GPS</small></div>
+ </div>
+ <div class="actions">
+  <button class="btn" id="exportBtn" disabled>Download GPS log (CSV)</button>
+  <button class="btn" id="resetBtn">Reset session</button>
+ </div>
+</section>
+
+<section class="panel">
+ <h2>Altitude log</h2>
+ <p class="sub">Latest GPS readings, including timestamps and reported accuracy.</p>
+ <div class="scroll">
+  <table><thead><tr><th>Time</th><th>Altitude (m)</th><th>Accuracy</th></tr></thead><tbody id="logBody"><tr><td colspan="3" class="muted">No readings yet.</td></tr></tbody></table>
+ </div>
+</section>
+
+<section class="panel">
+ <h2>Read this before climbing</h2>
+ <div class="note">Phone GPS altitude can drift by several meters or more. Trees, cliffs, buildings, weather, and device hardware affect readings. This tool reports raw device altitude and a simple smoothed estimate; it cannot guarantee the mountain’s true height above its base.</div>
+ <p class="sub" style="margin-top:12px">How the result works: start altitude = first valid GPS reading; highest altitude = highest smoothed reading so far; height gain = highest altitude − start altitude. The STOP altitude is shown separately. If you stop before reaching the summit or the signal is poor, the result may be misleading.</p>
+ <p class="sub">Location data is processed in this browser and is not uploaded by this page. Keep the phone secure, avoid dangerous routes, and do not rely on GPS alone for navigation.</p>
+</section>
+<div class="footer">No account or API key required · Uses the browser Geolocation API · Requires HTTPS or localhost</div>
+</div>
+<script>
+(() => {
+"use strict";
+const $=id=>document.getElementById(id);
+const mToFt=m=>m*3.280839895;
+const fmt=n=>Number.isFinite(n)?n.toLocaleString(undefined,{maximumFractionDigits:1}):"—";
+const fmtTime=ms=>{const s=Math.max(0,Math.floor(ms/1000));return `${Math.floor(s/3600)}:${String(Math.floor(s%3600/60)).padStart(2,"0")}:${String(s%60).padStart(2,"0")}`};
+let watchId=null, active=false, startTime=null, timer=null, rows=[], baseAlt=null, highAlt=null, stopAlt=null, lastSmooth=null, lastAccuracy=null;
+const status=(t,k="")=>{$("status").textContent=t;$("status").className="status"+(k?" "+k:"")};
+function setPair(mId,ftId,v){$(mId).textContent=Number.isFinite(v)?fmt(v)+" m":"—";$(ftId).textContent=Number.isFinite(v)?fmt(mToFt(v))+" ft":"—";}
+function render(){
+ setPair("baseM","baseFt",baseAlt);
+ setPair("topM","topFt",highAlt);
+ setPair("stopM","stopFt",stopAlt);
+ const gain=Number.isFinite(baseAlt)&&Number.isFinite(highAlt)?highAlt-baseAlt:NaN;
+ $("gainM").textContent=Number.isFinite(gain)?fmt(gain)+" m":"— m";
+ $("gainFt").textContent=Number.isFinite(gain)?fmt(mToFt(gain))+" ft":"— ft";
+ $("points").textContent=String(rows.length);
+ $("accuracy").textContent=Number.isFinite(lastAccuracy)?"Last vertical accuracy: ±"+fmt(lastAccuracy)+" m":"Vertical accuracy unavailable";
+ $("exportBtn").disabled=rows.length===0;
+ if(startTime){const elapsed=(active?Date.now():stopTime||Date.now())-startTime;$("duration").textContent=fmtTime(elapsed);}
+ else $("duration").textContent="—";
+ const gainNum=Number.isFinite(gain)?Math.max(0,gain):0;
+ $("progressBar").style.width=Math.min(100,gainNum/300*100)+"%";
+ $("progressText").textContent=Number.isFinite(gain)?`Recorded elevation gain: ${fmt(gain)} m / ${fmt(mToFt(gain))} ft`:"No climb recorded yet.";
+}
+let stopTime=null;
+function updateLog(){
+ const body=$("logBody");body.replaceChildren();
+ if(!rows.length){const tr=document.createElement("tr"),td=document.createElement("td");td.colSpan=3;td.textContent="No readings yet.";td.className="muted";tr.append(td);body.append(tr);return;}
+ rows.slice(-100).reverse().forEach(r=>{const tr=document.createElement("tr");[new Date(r.time).toLocaleTimeString(),Number.isFinite(r.alt) ? fmt(r.alt):"No altitude",Number.isFinite(r.altAcc)?"±"+fmt(r.altAcc)+" m":"—"].forEach(v=>{const td=document.createElement("td");td.textContent=v;tr.append(td)});body.append(tr)});
+}
+function onPosition(pos){
+ const c=pos.coords, now=Date.now();
+ if(c.altitude===null||!Number.isFinite(c.altitude)){
+  status("GPS position received, but your phone did not provide altitude. Try outdoors; this device/browser may not support altitude.","warn");return;
+ }
+ // Reject very poor horizontal fixes, but retain vertical accuracy as a caveat.
+ if(Number.isFinite(c.accuracy)&&c.accuracy>1000){status("GPS accuracy is very poor. Move outdoors to a clearer area.","warn");return;}
+ const alt=c.altitude;
+ // Mild smoothing of transient altitude jitter; first reading initializes it.
+ const smooth=lastSmooth===null?alt:(0.65*lastSmooth+0.35*alt);
+ lastSmooth=smooth;lastAccuracy=Number.isFinite(c.altitudeAccuracy)?c.altitudeAccuracy:null;
+ if(baseAlt===null){baseAlt=smooth;highAlt=smooth;startTime=now;status("Base altitude recorded. Walk safely toward the summit; tracking is active.","good");}
+ highAlt=Math.max(highAlt,smooth);
+ rows.push({time:now,lat:c.latitude,lon:c.longitude,alt,smoothedAlt:smooth,accuracy:c.accuracy,altAcc:c.altitudeAccuracy});
+ $("progressText").textContent="Tracking live GPS readings…";
+ render();updateLog();
+}
+function onError(err){
+ let msg=err.code===1?"Location permission denied. Allow location access in browser settings.":err.code===2?"Position unavailable. Turn on device Location and move outdoors.":err.code===3?"GPS timed out. Wait outdoors or try again.":"Location error: "+err.message;
+ status(msg,"bad");
+ if(active && err.code===1){stopTracking(false);}
+}
+function stopTracking(saveStop=true){
+ if(watchId!==null){navigator.geolocation.clearWatch(watchId);watchId=null;}
+ active=false;clearInterval(timer);timer=null;
+ if(saveStop)stopAlt=lastSmooth;
+ stopTime=Date.now();
+ $("startBtn").disabled=false;$("stopBtn").disabled=true;
+ status(saveStop?"Tracking stopped. Review the elevation gain and GPS accuracy below.":"Tracking stopped because location access failed.","warn");
+ render();
+}
+$("startBtn").addEventListener("click",()=>{
+ if(!navigator.geolocation){status("This browser does not support GPS geolocation.","bad");return;}
+ if(!window.isSecureContext){status("GPS requires HTTPS or localhost. Publish this page on GitHub Pages or use a local web server.","bad");return;}
+ if(active)return;
+ // New session starts cleanly so the first valid reading is the base reference.
+ rows=[];baseAlt=null;highAlt=null;stopAlt=null;lastSmooth=null;lastAccuracy=null;startTime=null;stopTime=null;
+ render();updateLog();
+ $("startBtn").disabled=true;$("stopBtn").disabled=false;
+ status("Requesting GPS… keep the phone outdoors and wait for a valid altitude.","");
+ active=true;
+ watchId=navigator.geolocation.watchPosition(onPosition,onError,{enableHighAccuracy:true,maximumAge:0,timeout:20000});
+ timer=setInterval(render,1000);
+});
+$("stopBtn").addEventListener("click",()=>{if(!active)return;stopTracking(true);});
+$("resetBtn").addEventListener("click",()=>{
+ if(active)stopTracking(false);
+ rows=[];baseAlt=null;highAlt=null;stopAlt=null;lastSmooth=null;lastAccuracy=null;startTime=null;stopTime=null;
+ $("startBtn").disabled=false;$("stopBtn").disabled=true;$("progressBar").style.width="0%";
+ status("Session reset. Go to the base, then press START.");render();updateLog();
+});
+$("exportBtn").addEventListener("click",()=>{
+ if(!rows.length)return;
+ const header=["timestamp_iso","latitude","longitude","altitude_m_raw","altitude_m_smoothed","horizontal_accuracy_m","vertical_accuracy_m"];
+ const lines=[header.join(","),...rows.map(r=>[new Date(r.time).toISOString(),r.lat,r.lon,r.alt,r.smoothedAlt,r.accuracy,r.altAcc].map(v=>v===null||v===undefined?"":String(v)).join(","))];
+ const blob=new Blob([lines.join("\r\n")],{type:"text/csv;charset=utf-8"});
+ const url=URL.createObjectURL(blob),a=document.createElement("a");a.href=url;a.download="mountain-gps-log.csv";a.click();URL.revokeObjectURL(url);
+});
+render();updateLog();
+})();
+</script>
+</body>
+</html>
